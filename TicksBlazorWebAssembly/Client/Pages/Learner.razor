@@ -1,0 +1,42 @@
+﻿@page "/learner"
+@inject ToastService ToastService;
+@using Microsoft.AspNetCore.SignalR.Client;
+@inject NavigationManager Navigation;
+@implements IAsyncDisposable;
+
+<PageTitle>Learner</PageTitle>
+
+<h1>Learner Page</h1>
+
+<Button @onclick="RaiseHand" class="btn btn-primary">Raise hand</Button>
+
+@code
+{
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/roomhub"))
+            .Build();
+
+        await hubConnection.StartAsync();
+        await hubConnection.SendAsync("JoinAsLearner");
+    }
+
+    async Task RaiseHand()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.SendAsync("RaiseHand");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}
