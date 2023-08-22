@@ -1,43 +1,30 @@
 ﻿@page "/tutor"
 @using Microsoft.AspNetCore.SignalR.Client;
+@using TicksBlazorWebAssembly.Client.Services;
+@implements IAsyncDisposable;
 @inject NavigationManager Navigation;
 @inject ToastService ToastService;
-@inject IJSRuntime JS;
-@implements IAsyncDisposable;
+@inject BrowserService Browser;
+@inject HubConnection Hub;
 
 <PageTitle>Tutor</PageTitle>
 
 <h1>Tutor Page</h1>
 
 @code {
-    private HubConnection? hubConnection;
-
-    private async Task playBeep()
-    {
-        await JS.InvokeVoidAsync("playBeep");
-    }
-
     protected override async Task OnInitializedAsync()
     {
-        hubConnection = new HubConnectionBuilder()
-            .WithUrl(Navigation.ToAbsoluteUri("/roomhub"))
-            .Build();
-
-        hubConnection.On<string>("LearnerHasRaisedHand", async (learnerId) =>
+        Hub.On<string>("LearnerHasRaisedHand", async (browserId) =>
         {
-            await playBeep();
-            ToastService.Notify(new ToastMessage(ToastType.Danger, $"A learner ({learnerId}) raised their hand!"));
+            await Browser.PlayBeep();
+            ToastService.Notify(new ToastMessage(ToastType.Danger, $"A learner ({browserId}) raised their hand!"));
         });
 
-        await hubConnection.StartAsync();
-        await hubConnection.SendAsync("JoinAsTutor");
+        await Hub.SendAsync("JoinAsTutor");
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (hubConnection is not null)
-        {
-            await hubConnection.DisposeAsync();
-        }
+        await Hub.SendAsync("Leave");
     }
 }

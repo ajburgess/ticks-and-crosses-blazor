@@ -14,9 +14,16 @@ namespace TicksBlazorWebAssembly.Server.Hubs
             await Groups.AddToGroupAsync(Context.ConnectionId, "Learners");
         }
 
-        public async Task RaiseHand()
+        public async Task RaiseHand(string? browserId)
         {
-            await Clients.Group("Tutors").SendAsync("LearnerHasRaisedHand", Context.ConnectionId);
+            await Clients.Group("Tutors").SendAsync("LearnerHasRaisedHand", browserId);
         }
+
+        public async Task Leave()
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "Learners");
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "Tutors");
+        }
+
     }
 }
